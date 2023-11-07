@@ -3,6 +3,7 @@ import { getUserInputYN } from './utils/input';
 import { ethers } from 'ethers'
 import { config } from 'dotenv';
 import LP_ABI from './abis/lp-abi.json';
+import PROXY_ABI from './abis/proxy-abi.json';
 import USDT_ABI from './abis/usdt-abi.json';
 config();
 
@@ -26,17 +27,7 @@ const axiosClient = axios.create({
   },
 });
 
-// Calls the /estimate endpoint to fetch the cost of the transaction and the messages to sign
-async function singleBetEstimateTx() {
-  // Azuro Game Market Variables from the subgraph
-  const conditionId: any = "100100000000000015811616850000000000000263423119";
-  const outcomeId: any = "2361";
-  const currentOdds: any = "1.835601489481";
-  // Bet variables
-  const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
-  const deadline = Math.floor(Date.now() / 1000) + 2000;
-  const affiliate = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // BookieBot Revenue Share Wallet
-  // Calculate minOdds
+function calculateMinOdds(currentOdds: any) {
   const slippage = 4; 
   const minimumOdds = 1 + ((currentOdds - 1) * (100 - slippage)) / 100;
   const oddsDecimals = 12;
@@ -44,9 +35,24 @@ async function singleBetEstimateTx() {
     minimumOdds.toFixed(oddsDecimals),
     oddsDecimals
   );
+  return minOdds;
+}
+
+async function singleBetEstimateTx() {
+
+  // Azuro Game Market Variables from the subgraph
+  const conditionId: any = "100100000000000015811616850000000000000263423119";
+  const outcomeId: any = "2361";
+  const currentOdds: any = "1.835601489481";
+
+  // Bet variables
+  const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
+  const deadline = Math.floor(Date.now() / 1000) + 2000;
+  const affiliate = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // BookieBot Revenue Share Wallet
+  const minOdds = calculateMinOdds(currentOdds);
 
   const encodedBetData = ethers.AbiCoder.defaultAbiCoder().encode(
-    [ 'uint256', 'uint256' ],
+    [ 'uint256', 'uint64' ],
     [ conditionId, outcomeId ]
   );
   
@@ -77,6 +83,7 @@ async function singleBetEstimateTx() {
   const { data } = await axiosClient.post('/single-chain/estimate', {
     sourceChain: SRC_CHAIN_ID,
     destinationChain: DST_CHAIN_ID,
+    sourceToken: USDT_ADDRESS,
     userAddress: wallet.address,
     tokenAmount: betAmount.toString(),
     transactions: [approvalTx, betTx],
