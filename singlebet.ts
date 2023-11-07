@@ -13,7 +13,7 @@ const DST_CHAIN_ID = 137; // Polygon
 const USDT_TO_BET = process.env.USDT_TO_BET!;
 const USDT_PROXY_ADDRESS = '0x7FFB3d637014488b63fb9858E279385685AFc1e2' // USDT Proxy contract on Polygon
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
-const LP_ADDRESS = '0xf5c1B93171D1D812d125233df15F36FEe8f4BA45' // Azuro LP Proxy contract on Polygon
+const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP Proxy contract on Polygon
 const CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
 const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
 
@@ -44,6 +44,7 @@ function calculateMinOdds(currentOdds: any) {
 async function singleBetEstimateTx() {
 
   // Azuro Game Market Variables from the subgraph
+
   const conditionId: any = "100100000000000015811616850000000000000263423119";
   const outcomeId: any = "2361";
   const currentOdds: any = "1.835601489481";
@@ -59,7 +60,8 @@ async function singleBetEstimateTx() {
     [ conditionId, outcomeId ]
   );
   
-  const encodedBet = lpInterface.encodeFunctionData('bet', [
+  const encodedBet = lpInterface.encodeFunctionData('betFor', [
+    wallet.address,
     CORE_ADDRESS, 
     betAmount, 
     deadline, 
@@ -107,37 +109,39 @@ async function main() {
 
   // Show transaction cost summary and prompt user to sign and proceed
   const totalCost: number = costSummary.totalAmount;
-  console.log(`Total cost (tx amount + gas + fees): ${totalCost} USDC\n`);
+  console.log(`Total cost (tx amount + gas + fees): ${totalCost} USDT\n`);
 
   const shouldExecute = await getUserInputYN(
     'Would you like to sign and execute the tx? (y/n) ',
   );
   if (!shouldExecute) return;
 
-  // const { metaTxTypedData, permitTypedData } = quote;
-  // const signatures = {
-  //   metaTxSignature: await wallet.signTypedData(
-  //     metaTxTypedData.domain,
-  //     metaTxTypedData.types,
-  //     metaTxTypedData.message,
-  //   ),
-  //   permitSignature: await wallet.signTypedData(
-  //     permitTypedData.domain,
-  //     permitTypedData.types,
-  //     permitTypedData.message,
-  //   ),
-  // };
+  const { fundingTokenTypedData, peazeTypedData } = quote;
+  const signatures = {
+    fundingTokenSignature: await wallet.signTypedData(
+      fundingTokenTypedData.domain,
+      fundingTokenTypedData.types,
+      fundingTokenTypedData.message,
+    ),
+    peazeSignature: await wallet.signTypedData(
+      peazeTypedData.domain,
+      peazeTypedData.types,
+      peazeTypedData.message,
+    ),
+  };
 
-  // console.log('Executing transaction...');
-  // const { data } = await axiosClient.post('/single-chain/execute', {
-  //   quote,
-  //   signatures,
-  // });
+  console.log('Executing transaction...');
+  const { data } = await axiosClient.post('/single-chain/execute', {
+    quote,
+    signatures,
+  });
 
-  // console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
+  console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
 }
 
 main().catch(e => {
+  console.log({ e });
+
   const errorMsg = e.response?.data?.message ?? `${e}`;
   const errorDetails = JSON.stringify(e.response?.data?.data, null, 2);
 
