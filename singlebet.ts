@@ -2,15 +2,17 @@ import axios from 'axios';
 import { getUserInputYN } from './utils/input';
 import { ethers } from 'ethers'
 import { config } from 'dotenv';
-import LP_ABI from './abis/lp-abi.json';
-import PROXY_ABI from './abis/proxy-abi.json';
+import LP_ABI from './abis/azuro-lp-abi.json';
+import PROXY_ABI from './abis/azuro-proxy-abi.json';
 import USDT_ABI from './abis/usdt-abi.json';
+import USDT_PROXY_ABI from './abis/usdt-proxy-abi.json';
 config();
 
 const SRC_CHAIN_ID = 137; // Polygon
 const DST_CHAIN_ID = 137; // Polygon
 const USDT_TO_BET = process.env.USDT_TO_BET!;
-const USDT_ADDRESS = '0x7FFB3d637014488b63fb9858E279385685AFc1e2' // USDT Proxy contract on Polygon
+const USDT_PROXY_ADDRESS = '0x7FFB3d637014488b63fb9858E279385685AFc1e2' // USDT Proxy contract on Polygon
+const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0xf5c1B93171D1D812d125233df15F36FEe8f4BA45' // Azuro LP Proxy contract on Polygon
 const CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
 const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
@@ -18,6 +20,7 @@ const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
 // Contract Interfaces
 const lpInterface = new ethers.Interface(LP_ABI);
 const usdtInterface = new ethers.Interface(USDT_ABI);
+const usdtProxyInterface = new ethers.Interface(USDT_PROXY_ABI);
 
 const axiosClient = axios.create({
   baseURL: process.env.PEAZE_API_URL,
@@ -71,15 +74,15 @@ async function singleBetEstimateTx() {
     to: LP_ADDRESS,
     data: encodedBet
   }
-
+  console.log('about to approve tx')
   const approvalTx = {
     to: USDT_ADDRESS,
-    data: usdtInterface.encodeFunctionData('approve', [
+    data: usdtProxyInterface.encodeFunctionData('approve', [
       LP_ADDRESS,
       betAmount
     ])
   };
-  
+  console.log('approved')
   const { data } = await axiosClient.post('/single-chain/estimate', {
     sourceChain: SRC_CHAIN_ID,
     destinationChain: DST_CHAIN_ID,
