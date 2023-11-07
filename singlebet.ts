@@ -8,18 +8,14 @@ import USDT_ABI from './abis/usdt-abi.json';
 import USDT_PROXY_ABI from './abis/usdt-proxy-abi.json';
 config();
 
-const SRC_CHAIN_ID = 137; // Polygon
-const DST_CHAIN_ID = 137; // Polygon
-const USDT_TO_BET = process.env.USDT_TO_BET!;
-const USDT_PROXY_ADDRESS = '0x7FFB3d637014488b63fb9858E279385685AFc1e2' // USDT Proxy contract on Polygon
+const USDT_TO_BET = "0.01"; 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
-const LP_ADDRESS = '0xf5c1B93171D1D812d125233df15F36FEe8f4BA45' // Azuro LP Proxy contract on Polygon
+const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
 const CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
 const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
 
 // Contract Interfaces
 const lpInterface = new ethers.Interface(LP_ABI);
-const usdtInterface = new ethers.Interface(USDT_ABI);
 const usdtProxyInterface = new ethers.Interface(USDT_PROXY_ABI);
 
 const axiosClient = axios.create({
@@ -44,9 +40,9 @@ function calculateMinOdds(currentOdds: any) {
 async function singleBetEstimateTx() {
 
   // Azuro Game Market Variables from the subgraph
-  const conditionId: any = "100100000000000015811616850000000000000263423119";
-  const outcomeId: any = "2361";
-  const currentOdds: any = "1.835601489481";
+  const conditionId: any = "100100000000000015808653660000000000000261232597";
+  const outcomeId: any = "10";
+  const currentOdds: any = "1.974126959136";
 
   // Bet variables
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
@@ -74,7 +70,7 @@ async function singleBetEstimateTx() {
     to: LP_ADDRESS,
     data: encodedBet
   }
-  console.log('about to approve tx')
+  
   const approvalTx = {
     to: USDT_ADDRESS,
     data: usdtProxyInterface.encodeFunctionData('approve', [
@@ -82,10 +78,10 @@ async function singleBetEstimateTx() {
       betAmount
     ])
   };
-  console.log('approved')
+  
   const { data } = await axiosClient.post('/single-chain/estimate', {
-    sourceChain: SRC_CHAIN_ID,
-    destinationChain: DST_CHAIN_ID,
+    sourceChain: 137,
+    destinationChain: 137,
     sourceToken: USDT_ADDRESS,
     userAddress: wallet.address,
     tokenAmount: betAmount.toString(),
@@ -113,20 +109,22 @@ async function main() {
     'Would you like to sign and execute the tx? (y/n) ',
   );
   if (!shouldExecute) return;
-
-  // const { metaTxTypedData, permitTypedData } = quote;
-  // const signatures = {
-  //   metaTxSignature: await wallet.signTypedData(
-  //     metaTxTypedData.domain,
-  //     metaTxTypedData.types,
-  //     metaTxTypedData.message,
-  //   ),
-  //   permitSignature: await wallet.signTypedData(
-  //     permitTypedData.domain,
-  //     permitTypedData.types,
-  //     permitTypedData.message,
-  //   ),
-  // };
+  
+  const { fundingTokenTypedData, peazeTypedData } = quote;
+  
+  const signatures = {
+    fundingTokenSignature: await wallet.signTypedData(
+      fundingTokenTypedData.domain,
+      fundingTokenTypedData.types,
+      fundingTokenTypedData.message,
+    ),
+    peazeTypedData: await wallet.signTypedData(
+      peazeTypedData.domain,
+      peazeTypedData.types,
+      peazeTypedData.message,
+    ),
+  };
+  console.log('signatures', signatures)
 
   // console.log('Executing transaction...');
   // const { data } = await axiosClient.post('/single-chain/execute', {
