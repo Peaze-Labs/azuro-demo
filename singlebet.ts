@@ -55,7 +55,8 @@ async function singleBetEstimateTx() {
     [ conditionId, outcomeId ]
   );
   
-  const encodedBet = lpInterface.encodeFunctionData('bet', [
+  const encodedBet = lpInterface.encodeFunctionData('betFor', [
+    wallet.address,
     CORE_ADDRESS, 
     betAmount, 
     deadline, 
@@ -103,39 +104,39 @@ async function main() {
 
   // Show transaction cost summary and prompt user to sign and proceed
   const totalCost: number = costSummary.totalAmount;
-  console.log(`Total cost (tx amount + gas + fees): ${totalCost} USDC\n`);
+  console.log(`Total cost (tx amount + gas + fees): ${totalCost} USDT\n`);
 
   const shouldExecute = await getUserInputYN(
     'Would you like to sign and execute the tx? (y/n) ',
   );
   if (!shouldExecute) return;
-  
+
   const { fundingTokenTypedData, peazeTypedData } = quote;
-  
   const signatures = {
     fundingTokenSignature: await wallet.signTypedData(
       fundingTokenTypedData.domain,
       fundingTokenTypedData.types,
       fundingTokenTypedData.message,
     ),
-    peazeTypedData: await wallet.signTypedData(
+    peazeSignature: await wallet.signTypedData(
       peazeTypedData.domain,
       peazeTypedData.types,
       peazeTypedData.message,
     ),
   };
-  console.log('signatures', signatures)
 
-  // console.log('Executing transaction...');
-  // const { data } = await axiosClient.post('/single-chain/execute', {
-  //   quote,
-  //   signatures,
-  // });
+  console.log('Executing transaction...');
+  const { data } = await axiosClient.post('/single-chain/execute', {
+    quote,
+    signatures,
+  });
 
-  // console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
+  console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
 }
 
 main().catch(e => {
+  console.log({ e });
+
   const errorMsg = e.response?.data?.message ?? `${e}`;
   const errorDetails = JSON.stringify(e.response?.data?.data, null, 2);
 

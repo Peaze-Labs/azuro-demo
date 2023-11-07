@@ -127,7 +127,7 @@ async function main() {
   
     // const { metaTxTypedData, permitTypedData } = quote;
     // const signatures = {
-    //   metaTxSignature: await wallet.signTypedData(
+    //   fundingTokenSignature: await wallet.signTypedData(
     //     metaTxTypedData.domain,
     //     metaTxTypedData.types,
     //     metaTxTypedData.message,
