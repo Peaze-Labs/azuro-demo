@@ -9,8 +9,8 @@ This repo showcases gasless betting on the [Azuro Protocol](https://azuro.org/) 
 ### Setting up
 
 ```sh
-git clone https://github.com/Peaze-Labs/azuro.git
-cd azuro
+git clone https://github.com/Peaze-Labs/azuro-demo.git
+cd azuro-demo
 npm i
 cp .env.example .env
 ```
@@ -60,15 +60,12 @@ Your wallet will play the role of the user in the demo and be used to sign the t
  	{
 	  	"where": {
 	      "hasActiveConditions": true,
-	      "liquidityPool": "0x7043e4e1c4045424858ecbced80989feafc11b36",
-	    	"sport_": {
-	       		"slug": "american-football"
-	      	}
+	      "liquidityPool": "0x7043e4e1c4045424858ecbced80989feafc11b36"
 		}
 	}
  	```
  	
- 	This will return the next upcoming American Football (NFL) game. The response should look something like this: 
+ 	This will return the next upcoming game. The response should look something like this: 
  	
 	```
 	{
