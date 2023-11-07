@@ -1,0 +1,21 @@
+{
+  "name": "quickstart",
+  "version": "1.0.0",
+  "description": "Complete example from the Peaze docs Quickstart guide",
+  "scripts": {
+    "start": "ts-node quickstart.ts"
+  },
+  "author": "The Peaze Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.5.1",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.0",
+    "readline": "^1.3.0"
+  }
+}
