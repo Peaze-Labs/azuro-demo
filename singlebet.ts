@@ -10,11 +10,7 @@ config();
 
 const USDT_TO_BET = "0.01"; 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
-<<<<<<< HEAD
-const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP Proxy contract on Polygon
-=======
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
->>>>>>> 6d953cd6d2b644bf3503cb5cab99aa624d861428
 const CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
 const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
 
@@ -44,16 +40,9 @@ function calculateMinOdds(currentOdds: any) {
 async function singleBetEstimateTx() {
 
   // Azuro Game Market Variables from the subgraph
-<<<<<<< HEAD
-
-  const conditionId: any = "100100000000000015811616850000000000000263423119";
-  const outcomeId: any = "2361";
-  const currentOdds: any = "1.835601489481";
-=======
   const conditionId: any = "100100000000000015808653660000000000000261232597";
   const outcomeId: any = "10";
   const currentOdds: any = "1.974126959136";
->>>>>>> 6d953cd6d2b644bf3503cb5cab99aa624d861428
 
   // Bet variables
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
