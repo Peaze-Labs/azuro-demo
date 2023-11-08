@@ -3,18 +3,21 @@ import { getUserInputYN } from './utils/input';
 import { ethers } from 'ethers'
 import { config } from 'dotenv';
 import LP_ABI from './abis/azuro-lp-abi.json';
-import PROXY_ABI from './abis/azuro-proxy-abi.json';
-import USDT_ABI from './abis/usdt-abi.json';
 import USDT_PROXY_ABI from './abis/usdt-proxy-abi.json';
 config();
 
-const USDT_TO_BET = "0.01"; 
+// FILL IN VALUES HERE 
+const USDT_TO_BET = "0.01"; // Amount of USDT to bet
+const AFFILIATE = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // Azuro Revenue Share Wallet
+const CONDITION_ID = "100100000000000015808653660000000000000261232597"; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID = "10"; // Azuro Game Market Variables from the subgraph
+const CURRENT_ODDS = "1.974126959136"; // Azuro Game Market Variables from the subgraph
+
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
 const CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
-const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
+const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!); // Wallet to bet with
 
-// Contract Interfaces
 const lpInterface = new ethers.Interface(LP_ABI);
 const usdtProxyInterface = new ethers.Interface(USDT_PROXY_ABI);
 
@@ -39,20 +42,13 @@ function calculateMinOdds(currentOdds: any) {
 
 async function singleBetEstimateTx() {
 
-  // Azuro Game Market Variables from the subgraph
-  const conditionId: any = "100100000000000015808653660000000000000261232597";
-  const outcomeId: any = "10";
-  const currentOdds: any = "1.974126959136";
-
-  // Bet variables
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
   const deadline = Math.floor(Date.now() / 1000) + 2000;
-  const affiliate = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // BookieBot Revenue Share Wallet
-  const minOdds = calculateMinOdds(currentOdds);
+  const minOdds = calculateMinOdds(CURRENT_ODDS);
 
-  const encodedBetData = ethers.AbiCoder.defaultAbiCoder().encode(
+  const betData = ethers.AbiCoder.defaultAbiCoder().encode(
     [ 'uint256', 'uint64' ],
-    [ conditionId, outcomeId ]
+    [ CONDITION_ID, OUTCOME_ID ]
   );
   
   const encodedBet = lpInterface.encodeFunctionData('betFor', [
@@ -61,8 +57,8 @@ async function singleBetEstimateTx() {
     betAmount, 
     deadline, 
     {
-     affiliate,
-     data: encodedBetData,
+     affiliate: AFFILIATE,
+     data: betData,
      minOdds: minOdds, 
     }
   ]);
@@ -93,18 +89,27 @@ async function singleBetEstimateTx() {
   return data;
 }
 
+async function singleBetExecuteTx({ quote, signatures }: { quote: any, signatures: any }) {
+
+  const { data } = await axiosClient.post('/single-chain/execute', {
+    quote,
+    signatures,
+  });
+
+  return data;
+}
+
 async function main() {
+  console.log('\n');
   console.log('-'.repeat(60));
   console.log(`Azuro Protocol tx on Polygon`);
   console.log('-'.repeat(60) + '\n');
 
+  // Call singleBetEstimateTx() to fetch cost summary and messages
   console.log('Getting tx estimate...' + '\n');
   const { quote, costSummary } = await singleBetEstimateTx();
-  console.log(`Quote data:\n${JSON.stringify(quote, null, 2)}\n`);
-
-  // Show transaction cost summary and prompt user to sign and proceed
-  const totalCost: number = costSummary.totalAmount;
-  console.log(`Total cost (tx amount + gas + fees): ${totalCost} USDT\n`);
+  console.log(`Cost summary:\n${JSON.stringify(costSummary, null, 2)}\n`);
+  console.log(`Total cost (tx amount + gas + fees): ${costSummary.totalAmount} USDT\n`);
 
   const shouldExecute = await getUserInputYN(
     'Would you like to sign and execute the tx? (y/n) ',
@@ -112,6 +117,8 @@ async function main() {
   if (!shouldExecute) return;
 
   const { fundingTokenTypedData, peazeTypedData } = quote;
+
+  // Sign messages from singleBetEstimateTx() response to generate signatures
   const signatures = {
     fundingTokenSignature: await wallet.signTypedData(
       fundingTokenTypedData.domain,
@@ -125,11 +132,9 @@ async function main() {
     ),
   };
 
+  // Call singleBetExecuteTx() to execute the transaction
   console.log('Executing transaction...');
-  const { data } = await axiosClient.post('/single-chain/execute', {
-    quote,
-    signatures,
-  });
+  const { data } = await singleBetExecuteTx({quote, signatures});
 
   console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
 }
