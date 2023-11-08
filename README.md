@@ -70,9 +70,7 @@ Your wallet will play the role of the user in the demo and be used to sign the t
 	```
 	{
 	  "data": {
-	    "games": [
-	      "swag"
-	    ],
+	    "games": [...],
 	    "conditions": [
 	      {
 	        "conditionId": "100100000000000015811616850000000000000263423119",
@@ -94,7 +92,7 @@ Your wallet will play the role of the user in the demo and be used to sign the t
 	}
 	```
 	
-	Grab the `conditionId`, `currentOdds`, and `outcomeId`. Paste these into their appropriate variable in the 	`singleBetEstimate` function in `singlebet.ts`.	
+	Grab the `conditionId`, `currentOdds`, and `outcomeId`. Paste these into their corresponding const at the top of the `singlebet.ts` file.	
 
 2. Use the following command to gaslessly place a bet on Azuro with the bet conditions defined. 
 	
