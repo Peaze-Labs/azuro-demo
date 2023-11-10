@@ -2,16 +2,16 @@ import axios from 'axios';
 import { getUserInputYN } from './utils/input';
 import { ethers } from 'ethers'
 import { config } from 'dotenv';
-import LP_ABI from './abis/lp-abi.json';
-import PROXY_ABI from './abis/proxy-abi.json';
-import USDT_ABI from './abis/usdt-abi.json';
+import LP_ABI from './abis/azuro-lp-abi.json';
+import PROXY_ABI from './abis/azuro-proxy-abi.json';
+import USDT_ABI from './abis/usdt-proxy-abi.json';
 config();
 
 const SRC_CHAIN_ID = 137; // Polygon
 const DST_CHAIN_ID = 137; // Polygon
 const USDT_TO_BET = process.env.USDT_TO_BET!;
-const USDT_ADDRESS = '0x7FFB3d637014488b63fb9858E279385685AFc1e2' // USDT Proxy contract on Polygon
-const LP_ADDRESS = '0xf5c1B93171D1D812d125233df15F36FEe8f4BA45' // Azuro LP Proxy contract on Polygon
+const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT Proxy contract on Polygon
+const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP Proxy contract on Polygon
 const EXPRESS_ADDRESS = '0x92a4e8Bc6B92a2e1ced411f41013B5FE6BE07613' // Azuro BetExpress contract on Polygon
 const PROXY_ADDRESS = '0x200BD65A3189930634af857C72281abE63C3da5e' // Azuro ProxyFront contract on Polygon
 const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
@@ -43,12 +43,12 @@ function calculateMinOdds(currentOdds: any) {
 async function comboBetEstimateTx() {
 
   // Azuro Game Market Variables from the subgraph
-  const conditionId1: any = "100100000000000015811616850000000000000263423119";
-  const outcomeId1: any = "2361";
-  // const currentOdds1: any = "1.835601489481";
-  const conditionId2: any = "100100000000000015811616850000000000000263423119";
-  const outcomeId2: any = "2361";
-  // const currentOdds2: any = "1.835601489481";
+  const conditionId1: any = "100100000000000015814887720000000000000267008541";
+  const outcomeId1: any = "225";
+  // const currentOdds1: any = "1.849064571403";
+  const conditionId2: any = "100100000000000015814817570000000000000266384468";
+  const outcomeId2: any = "2367";
+  // const currentOdds2: any = "2.096271342439";
   const selections: {}[] = [
     [conditionId1, outcomeId1],
     [conditionId2, outcomeId2]
@@ -125,27 +125,27 @@ async function main() {
     );
     if (!shouldExecute) return;
   
-    // const { metaTxTypedData, permitTypedData } = quote;
-    // const signatures = {
-    //   fundingTokenSignature: await wallet.signTypedData(
-    //     metaTxTypedData.domain,
-    //     metaTxTypedData.types,
-    //     metaTxTypedData.message,
-    //   ),
-    //   permitSignature: await wallet.signTypedData(
-    //     permitTypedData.domain,
-    //     permitTypedData.types,
-    //     permitTypedData.message,
-    //   ),
-    // };
+    const { fundingTypedData, peazeTypedData } = quote;
+    const signatures = {
+      fundingSignature: await wallet.signTypedData(
+        fundingTypedData.domain,
+        fundingTypedData.types,
+        fundingTypedData.message,
+      ),
+      peazeSignature: await wallet.signTypedData(
+        peazeTypedData.domain,
+        peazeTypedData.types,
+        peazeTypedData.message,
+      ),
+    };
   
-    // console.log('Executing transaction...');
-    // const { data } = await axiosClient.post('/single-chain/execute', {
-    //   quote,
-    //   signatures,
-    // });
+    console.log('Executing transaction...');
+    const { data } = await axiosClient.post('/single-chain/execute', {
+      quote,
+      signatures,
+    });
   
-    // console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
+    console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
   }
   
   main().catch(e => {

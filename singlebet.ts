@@ -40,9 +40,9 @@ function calculateMinOdds(currentOdds: any) {
 async function singleBetEstimateTx() {
 
   // Azuro Game Market Variables from the subgraph
-  const conditionId: any = "100100000000000015808653660000000000000261232597";
-  const outcomeId: any = "10";
-  const currentOdds: any = "1.974126959136";
+  const conditionId: any = "100100000000000015814963770000000000000266366790";
+  const outcomeId: any = "2285";
+  const currentOdds: any = "1.669498210933";
 
   // Bet variables
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
