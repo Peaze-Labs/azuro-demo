@@ -9,9 +9,8 @@ config();
 // FILL IN VALUES HERE 
 const USDT_TO_BET = "0.1"; // Amount of USDT to bet
 const AFFILIATE = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // Azuro Revenue Share Wallet
-const CONDITION_ID = "100100000000000015808656700000000000000261230483"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID = "26"; // Azuro Game Market Variables from the subgraph
-const CURRENT_ODDS = "2.378402136936"; // Azuro Game Market Variables from the subgraph
+const CONDITION_ID = "100100000000000015814974340000000000000267367374"; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID = "7759"; // Azuro Game Market Variables from the subgraph
 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
@@ -29,29 +28,23 @@ const axiosClient = axios.create({
   },
 });
 
-function calculateMinOdds(currentOdds: any) {
-  const slippage = 4; 
-  const minimumOdds = 1 + ((currentOdds - 1) * (100 - slippage)) / 100;
-  const oddsDecimals = 12;
-  const minOdds = ethers.parseUnits(
-    minimumOdds.toFixed(oddsDecimals),
-    oddsDecimals
-  );
-  return minOdds;
-}
+async function main() {
 
-// Gather bet data, and submit /estimate request to Peaze API
-async function singleBetEstimateTx() {
+  console.log('\n' + '-'.repeat(60));
+  console.log(`Azuro single-bet on Polygon`);
+  console.log('-'.repeat(60) + '\n');
+
+  console.log('Getting tx estimate...\n');
 
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
   const deadline = Math.floor(Date.now() / 1000) + 2000;
-  const minOdds = calculateMinOdds(CURRENT_ODDS);
+  const minOdds = 0;
 
   const betData = ethers.AbiCoder.defaultAbiCoder().encode(
     [ 'uint256', 'uint64' ],
     [ CONDITION_ID, OUTCOME_ID ]
   );
-  
+
   const encodedBet = lpInterface.encodeFunctionData('betFor', [
     wallet.address,
     CORE_ADDRESS, 
@@ -63,7 +56,7 @@ async function singleBetEstimateTx() {
      minOdds: minOdds, 
     }
   ]);
-  
+
   const betTx = {
     to: LP_ADDRESS,
     data: encodedBet
@@ -76,10 +69,9 @@ async function singleBetEstimateTx() {
       betAmount
     ])
   };
-  
+
   const { data } = await axiosClient.post('/single-chain/estimate', {
     sourceChain: 137,
-    destinationChain: 137,
     sourceToken: USDT_ADDRESS,
     userAddress: wallet.address,
     tokenAmount: betAmount.toString(),
@@ -87,33 +79,23 @@ async function singleBetEstimateTx() {
     expectedERC20Tokens: [], 
   });
 
-  return data;
-}
+  const { quote, costSummary } = data;
 
-async function main() {
-  console.log('\n' + '-'.repeat(60));
-  console.log(`Azuro Protocol tx on Polygon`);
-  console.log('-'.repeat(60) + '\n');
-
-  // Call singleBetEstimateTx() to fetch cost summary and messages
-  console.log('Getting tx estimate...' + '\n');
-  const { quote, costSummary } = await singleBetEstimateTx();
-  console.log(`Cost summary:\n${JSON.stringify(costSummary, null, 2)}\n`);
-  console.log(`Total cost (tx amount + gas + fees): ${costSummary.totalAmount} USDT\n`);
+  console.log(`Cost summary: ${JSON.stringify(costSummary, null, 2)}`);
+  console.log(`Total cost (tx amount + gas + fee) : ${costSummary.totalAmount} USDT\n`);
 
   const shouldExecute = await getUserInputYN(
-    'Would you like to sign and execute the tx? (y/n) ',
+    'Would you like to sign and execute the tx? (y/n): ',
   );
   if (!shouldExecute) return;
 
-  const { fundingTokenTypedData, peazeTypedData } = quote;
+  const { fundingTypedData, peazeTypedData } = quote;
 
-  // Sign messages from singleBetEstimateTx() response to generate signatures
   const signatures = {
-    fundingTokenSignature: await wallet.signTypedData(
-      fundingTokenTypedData.domain,
-      fundingTokenTypedData.types,
-      fundingTokenTypedData.message,
+    fundingSignature: await wallet.signTypedData(
+      fundingTypedData.domain,
+      fundingTypedData.types,
+      fundingTypedData.message,
     ),
     peazeSignature: await wallet.signTypedData(
       peazeTypedData.domain,
@@ -122,14 +104,14 @@ async function main() {
     ),
   };
 
-  // Submit quote and signatures to Peaze API /execute request
-  console.log('\n' + 'Executing transaction...');
-  const { data } = await axiosClient.post('/single-chain/execute', {
-    quote,
-    signatures,
+  console.log('\nExecuting transaction...\n');
+
+  const executeResponse = await axiosClient.post('/single-chain/execute', {
+      quote,
+      signatures,
   });
 
-  console.log(`Transaction submitted:\n${JSON.stringify(data, null, 2)}\n`);
+  console.log(`Transaction submitted:\n${JSON.stringify(executeResponse.data, null, 2)}\n`);
 }
 
 main().catch(e => {
