@@ -2,31 +2,24 @@ import axios from 'axios';
 import { getUserInputYN } from './utils/input';
 import { ethers } from 'ethers'
 import { config } from 'dotenv';
+import LP_ABI from './abis/azuro-lp-abi.json';
 import USDT_PROXY_ABI from './abis/usdt-proxy-abi.json';
-import AZURO_PROXY_ABI from './abis/azuro-proxy-abi.json'
 config();
 
-// FILL IN VALUES HERE
-const USDT_TO_BET = "0.1" // Amount of USDT to bet
-const AFFILIATE = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // Azuro Revenue Share Wallet
-// bet #1
-const CONDITION_ID1 = "100100000000000015814974340000000000000267367374"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID1 = "7759"; // Azuro Game Market Variables from the subgraph
-// bet #2
-const CONDITION_ID2 = "100100000000000015814974290000000000000267363108"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID2 = "7763"; // Azuro Game Market Variables from the subgraph
+// FILL IN VALUES HERE 
+const USDT_TO_BET = "0.1"; // Amount of USDT to bet
+const AFFILIATE = ""; // Azuro Revenue Share Wallet
+const CONDITION_ID = ""; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID = ""; // Azuro Game Market Variables from the subgraph
 
-const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT Proxy contract on Polygon
+const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
-const EXPRESS_ADDRESS = '0x92a4e8Bc6B92a2e1ced411f41013B5FE6BE07613' // Azuro BetExpress contract on Polygon
-const PROXY_ADDRESS = '0x200BD65A3189930634af857C72281abE63C3da5e' // Azuro ProxyFront contract on Polygon
-const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!);
+const PREMATCH_CORE_ADDRESS = '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7' // Azuro PrematchCore contract on Polygon
+const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY!); // Wallet to bet with
 
-// Contract Interfaces
-const azuroProxyInterface = new ethers.Interface(AZURO_PROXY_ABI);
+const lpInterface = new ethers.Interface(LP_ABI);
 const usdtProxyInterface = new ethers.Interface(USDT_PROXY_ABI);
 
-// Set up the axios client
 const axiosClient = axios.create({
   baseURL: process.env.PEAZE_API_URL,
   headers: {
@@ -38,49 +31,41 @@ const axiosClient = axios.create({
 async function main() {
 
   console.log('\n' + '-'.repeat(60));
-  console.log(`Azuro combo-bet on Polygon`);
+  console.log(`Azuro single-bet on Polygon`);
   console.log('-'.repeat(60) + '\n');
 
   console.log('Getting tx estimate...\n');
 
   const betAmount = ethers.parseUnits(USDT_TO_BET, 6);
   const deadline = Math.floor(Date.now() / 1000) + 2000;
-
-  const selections: {}[] = [
-    [CONDITION_ID1, OUTCOME_ID1],
-    [CONDITION_ID2, OUTCOME_ID2]
-  ];
+  const minOdds = 0;
 
   const betData = ethers.AbiCoder.defaultAbiCoder().encode(
-    [ 'tuple(uint256, uint64)[]' ], 
-    [ selections ]
+    [ 'uint256', 'uint64' ],
+    [ CONDITION_ID, OUTCOME_ID ]
   );
 
-  const encodedBet = azuroProxyInterface.encodeFunctionData('bet', [
-    LP_ADDRESS,
-    [
-      {
-        core: EXPRESS_ADDRESS, 
-        amount: betAmount,
-        expiresAt: deadline,
-        extraData: {
-          affiliate: AFFILIATE, 
-          minOdds: 0, 
-          data: betData
-        }
-      }
-    ]
-  ])
+  const encodedBet = lpInterface.encodeFunctionData('betFor', [
+    wallet.address,
+    PREMATCH_CORE_ADDRESS, 
+    betAmount, 
+    deadline, 
+    {
+     affiliate: AFFILIATE,
+     data: betData,
+     minOdds: minOdds, 
+    }
+  ]);
 
   const betTx = {
-    to: PROXY_ADDRESS,
+    to: LP_ADDRESS,
     data: encodedBet
   };
-
+  
   const approvalTx = {
     to: USDT_ADDRESS,
     data: usdtProxyInterface.encodeFunctionData('approve', [
-      PROXY_ADDRESS,
+      LP_ADDRESS,
       betAmount
     ])
   };
@@ -107,7 +92,7 @@ async function main() {
 
   const { fundingTypedData, peazeTypedData } = quote;
 
-  // Generate signatures by signing message from Peaze /estimate endpoing response
+  // Sign messages from Peaze /estimate response
   const signatures = {
     fundingSignature: await wallet.signTypedData(
       fundingTypedData.domain,
@@ -131,13 +116,15 @@ async function main() {
 
   console.log(`Transaction submitted:\n${JSON.stringify(executeResponse.data, null, 2)}\n`);
 }
-  
-  main().catch(e => {
-    const errorMsg = e.response?.data?.message ?? `${e}`;
-    const errorDetails = JSON.stringify(e.response?.data?.data, null, 2);
-  
-    console.log('We got an error');
-    console.log(errorMsg);
-    if (errorDetails) console.log(`Error details:\n${errorDetails}`);
-    process.exit(1);
-  });
+
+main().catch(e => {
+  console.log({ e });
+
+  const errorMsg = e.response?.data?.message ?? `${e}`;
+  const errorDetails = JSON.stringify(e.response?.data?.data, null, 2);
+
+  console.log('We got an error');
+  console.log(errorMsg);
+  if (errorDetails) console.log(`Error details:\n${errorDetails}`);
+  process.exit(1);
+});
