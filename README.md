@@ -20,7 +20,7 @@ Your wallet will play the role of the user in the demo and be used to sign the t
 
 ### Running the demo
 
-1. Obtaining data. 
+1. Obtaining betting data. 
 
 	Visit the [Azuro GraphQL interface](https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-polygon-v3). 
  
@@ -95,18 +95,34 @@ Your wallet will play the role of the user in the demo and be used to sign the t
 
 	For a combo-bet, grab two `conditionId` and `outcomeId` pairs from _separate_ games. Paste these values as the `CONDITION_ID1`, `OUTCOME_ID1`, `CONDITION_ID2`, and `OUTCOME_ID2` constants at the top of the `combobet.ts` file. 
 
-2. Use the following command to place bets
+2. Use the following commands to place bets
 	
 	**single bet:**
 
 	```sh
-	npx ts-node singlebet.ts
+	npx ts-node single-bet.ts
 	```
 
 	**combo bet:**
 
 	```sh
-	npx ts-node combobet.ts
+	npx ts-node combo-bet.ts
+	```
+
+3. Redeeming winning bets 
+
+	In the `redeem-single-bet.ts` or `redeem-combo-bet.ts` files, paste in your bet ID as the `BET_ID` constant at the top. Then, use the following commands to redeem: 
+
+	**single bet:**
+
+	```sh
+	npx ts-node redeem-single-bet.ts
+	```
+
+	**combo bet:**
+
+	```sh
+	npx ts-node redeem-combo-bet.ts
 	```
 
 ### Troubleshooting
