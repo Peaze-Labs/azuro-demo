@@ -8,9 +8,9 @@ config();
 
 // FILL IN VALUES HERE 
 const USDT_TO_BET = "0.1"; // Amount of USDT to bet
-const AFFILIATE = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // Azuro Revenue Share Wallet
-const CONDITION_ID = "100100000000000015814974340000000000000267367374"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID = "7759"; // Azuro Game Market Variables from the subgraph
+const AFFILIATE = ""; // Azuro Revenue Share Wallet
+const CONDITION_ID = ""; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID = ""; // Azuro Game Market Variables from the subgraph
 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon
@@ -70,6 +70,7 @@ async function main() {
     ])
   };
 
+  // Send request to Peaze /estimate endpoint to fetch `quote` and `costSummary`
   const { data } = await axiosClient.post('/single-chain/estimate', {
     sourceChain: 137,
     sourceToken: USDT_ADDRESS,
@@ -91,6 +92,7 @@ async function main() {
 
   const { fundingTypedData, peazeTypedData } = quote;
 
+  // Generate signatures by signing message from Peaze /estimate endpoing response
   const signatures = {
     fundingSignature: await wallet.signTypedData(
       fundingTypedData.domain,
@@ -106,6 +108,7 @@ async function main() {
 
   console.log('\nExecuting transaction...\n');
 
+  // Send request to Peaze /execute endpoint to submit the transaction
   const executeResponse = await axiosClient.post('/single-chain/execute', {
       quote,
       signatures,

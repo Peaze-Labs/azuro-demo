@@ -85,6 +85,7 @@ async function main() {
     ])
   };
 
+  // Send request to Peaze /estimate endpoint to fetch `quote` and `costSummary`
   const { data } = await axiosClient.post('/single-chain/estimate', {
     sourceChain: 137,
     sourceToken: USDT_ADDRESS,
@@ -100,12 +101,13 @@ async function main() {
   console.log(`Total cost (tx amount + gas + fee) : ${costSummary.totalAmount} USDT\n`);
 
   const shouldExecute = await getUserInputYN(
-    'Would you like to sign and execute the tx? (y/n):',
+    'Would you like to sign and execute the tx? (y/n): ',
   );
   if (!shouldExecute) return;
 
   const { fundingTypedData, peazeTypedData } = quote;
 
+  // Generate signatures by signing message from Peaze /estimate endpoing response
   const signatures = {
     fundingSignature: await wallet.signTypedData(
       fundingTypedData.domain,
@@ -121,6 +123,7 @@ async function main() {
 
   console.log('\nExecuting transaction...\n');
 
+  // Send request to Peaze /execute endpoint to submit the transaction
   const executeResponse = await axiosClient.post('/single-chain/execute', {
       quote,
       signatures,
