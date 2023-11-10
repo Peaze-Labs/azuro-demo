@@ -7,14 +7,14 @@ import AZURO_PROXY_ABI from './abis/azuro-proxy-abi.json'
 config();
 
 // FILL IN VALUES HERE
-const USDT_TO_BET = "0.1" // Amount of USDT to bet
-const AFFILIATE = "0x3121e8d2a4f0F220e8C7C7c6D9a7046527A54B19"; // Azuro Revenue Share Wallet
+const USDT_TO_BET = "" // Amount of USDT to bet
+const AFFILIATE = ""; // Azuro Revenue Share Wallet
 // bet #1
-const CONDITION_ID1 = "100100000000000015814974340000000000000267367374"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID1 = "7759"; // Azuro Game Market Variables from the subgraph
+const CONDITION_ID1 = ""; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID1 = ""; // Azuro Game Market Variables from the subgraph
 // bet #2
-const CONDITION_ID2 = "100100000000000015814974290000000000000267363108"; // Azuro Game Market Variables from the subgraph
-const OUTCOME_ID2 = "7763"; // Azuro Game Market Variables from the subgraph
+const CONDITION_ID2 = ""; // Azuro Game Market Variables from the subgraph
+const OUTCOME_ID2 = ""; // Azuro Game Market Variables from the subgraph
 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT Proxy contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon

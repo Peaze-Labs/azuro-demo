@@ -6,7 +6,7 @@ import LP_ABI from './abis/azuro-lp-abi.json';
 config();
 
 // FILL IN VALUES HERE 
-const BET_ID = "38325";
+const BET_ID = "";
 
 const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' // USDT contract on Polygon
 const LP_ADDRESS = '0x7043E4e1c4045424858ECBCED80989FeAfC11B36' // Azuro LP contract on Polygon

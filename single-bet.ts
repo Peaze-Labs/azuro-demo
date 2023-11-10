@@ -7,7 +7,7 @@ import USDT_PROXY_ABI from './abis/usdt-proxy-abi.json';
 config();
 
 // FILL IN VALUES HERE 
-const USDT_TO_BET = "0.1"; // Amount of USDT to bet
+const USDT_TO_BET = ""; // Amount of USDT to bet
 const AFFILIATE = ""; // Azuro Revenue Share Wallet
 const CONDITION_ID = ""; // Azuro Game Market Variables from the subgraph
 const OUTCOME_ID = ""; // Azuro Game Market Variables from the subgraph

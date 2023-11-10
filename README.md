@@ -2,7 +2,7 @@
 
 This repo showcases gasless betting on the [Azuro Protocol](https://azuro.org/) via Peaze. 
 
-## What you'll need
+### What you'll need
 
 1. Wallet with a bit of Polygon [USDT](https://polygonscan.com/token/0xc2132D05D31c914a87C6611C10748AEb04B58e8F) to bet with. 
 
