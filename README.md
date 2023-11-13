@@ -15,8 +15,7 @@ npm i
 cp .env.example .env
 ```
 
-Then fill in your private key in `.env`. 
-Your wallet will play the role of the user in the demo and be used to sign the transaction.
+Then fill in your private key and Peaze API key in `.env`. 
 
 ### Running the demo
 
